@@ -2,20 +2,15 @@ package com.team18.flooding;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Topology {
     private Map<InetAddress, DataPacket> requestMappings;
-    private Map<InetAddress, Long> timeOfFlights;
 
     private Vertex self;
 
     Topology(InetAddress myAddress) {
         requestMappings = new HashMap<>();
-        timeOfFlights = new HashMap<>();
         self = new Vertex(myAddress, 0);
     }
 
@@ -23,7 +18,7 @@ public class Topology {
      * @param packet
      */
     void notifyRequest(DataPacket packet) {
-        this.requestMappings.put(packet.getSourceIp(), packet);
+        this.requestMappings.put(packet.getDestinationIp(), packet);
     }
 
     /**
@@ -34,20 +29,30 @@ public class Topology {
         // in the reverse order
         String[] path = packet.getMessage().split("&");
         DataPacket requestPacket = requestMappings.get(packet.getSourceIp());
+        if (requestPacket == null) {
+            System.out.println("Request packet was null");
+            return;
+        }
         try {
             // Reply & ip1 & ip2 is the format, so skip the first block which is just the text reply
             for (int i = path.length - 1; i > 1; i--) {
-                InetAddress addr = InetAddress.getByName(path[i]);
-                InetAddress connectedTo = InetAddress.getByName(path[i - 1]);
+                InetAddress connectedTo = InetAddress.getByName(path[i]);
+                InetAddress addr = InetAddress.getByName(path[i - 1]);
                 long timeOfFlight = requestPacket.getCreationTime() - packet.getReceivedTime();
-                if(timeOfFlights.containsKey(addr) && (timeOfFlight < timeOfFlights.get(addr))){
-                    self.addConnection(addr, connectedTo, timeOfFlight);
-                }
+                self.addConnection(addr, connectedTo, timeOfFlight);
+
+//                if(timeOfFlights.containsKey(addr) && (timeOfFlight < timeOfFlights.get(addr))){
+//                    self.addConnection(addr, connectedTo, timeOfFlight);
+//                }
             }
-        }catch (UnknownHostException e){
+        } catch (UnknownHostException e) {
             System.err.println("Could not convert the path addresses");
             e.printStackTrace();
         }
+    }
+
+    public Vertex getRootVertex() {
+        return self;
     }
 
     class Vertex {
@@ -63,16 +68,11 @@ public class Topology {
 
         void addConnectedVertex(Vertex v) {
             for (Vertex vertex : connectedVertices) {
-                if (vertex.address.equals(v.address)) {
-                    //already present
+                if (vertex.getAddress().equals(v.getAddress())) {
                     return;
                 }
             }
             connectedVertices.add(v);
-        }
-
-        void removeConnectedVertex(InetAddress address) {
-            connectedVertices.removeIf(v -> v.address.equals(address));
         }
 
         void addConnection(InetAddress address, InetAddress connectedTo, long timeOfFlight) {
@@ -88,6 +88,18 @@ public class Topology {
             }
         }
 
+        public InetAddress getAddress() {
+            return address;
+        }
+
+        public long getTimeOfFlight() {
+            return timeOfFlight;
+        }
+
+        public List<Vertex> getConnectedVertices() {
+            return connectedVertices;
+        }
+
         /**
          * Requires: start.address != address
          *
@@ -101,6 +113,11 @@ public class Topology {
                 this.connectedVertices.removeIf(v -> v.cleanup(address));
                 return false;
             }
+        }
+
+        @Override
+        public int hashCode() {
+            return address.hashCode();
         }
     }
 }

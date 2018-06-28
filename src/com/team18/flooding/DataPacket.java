@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 
 public class DataPacket {
     private static final String DELIMITER = ",";
+    private static final String END_DELIMITER = "#";
     private int remainingHops = 10;
     private long creationTime;
     private long receivedTime;
@@ -34,7 +35,12 @@ public class DataPacket {
         } catch (UnknownHostException e) {
             throw new IllegalArgumentException("Could not parse the source and or destination ip");
         }
-        message = parts[4].trim();
+        message = parts[4].split("#")[0];
+        message.replace("#","");
+    }
+
+    public int getRemainingHops() {
+        return remainingHops;
     }
 
     public void setRemainingHops(int remainingHops) {
@@ -56,7 +62,7 @@ public class DataPacket {
         builder.append(creationTime).append(DELIMITER);
         builder.append(sourceIp.getHostAddress()).append(DELIMITER);
         builder.append(destinationIp.getHostAddress()).append(DELIMITER);
-        builder.append(message);
+        builder.append(message).append(END_DELIMITER);
         DatagramPacket packet = new DatagramPacket(builder.toString().getBytes(), builder.length());
         packet.setPort(PORT);
         packet.setAddress(destinationIp);
@@ -70,7 +76,7 @@ public class DataPacket {
         builder.append(creationTime).append(DELIMITER);
         builder.append(sourceIp.getHostAddress()).append(DELIMITER);
         builder.append(destinationIp.getHostAddress()).append(DELIMITER);
-        builder.append(message);
+        builder.append(message).append(END_DELIMITER);
         DatagramPacket packet = new DatagramPacket(builder.toString().getBytes(), builder.length());
         packet.setPort(PORT);
         packet.setAddress(destinationIp);
