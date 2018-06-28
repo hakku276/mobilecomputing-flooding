@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="flooding:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/flooding</output-path>
+    <root id="archive" name="mobilecomputing-flooding.jar">
+      <element id="module-output" name="mobilecomputing-flooding" />
+    </root>
+  </artifact>
+</component>
