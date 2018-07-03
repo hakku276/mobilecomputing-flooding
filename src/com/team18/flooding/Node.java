@@ -22,7 +22,7 @@ class Node {
     private Thread receiverThread;
     private byte[] receiveBuffer = new byte[1024];
 
-    private TimerTask linkDiscovery = new TimerTask() {
+    private TimerTask linkDiscoveryService = new TimerTask() {
         @Override
         public void run() {
             DataPacket dataPacket = new DataPacket(myAddress, broadcastAddress, "Link Discovery");
@@ -60,7 +60,7 @@ class Node {
                         helloPacket.appendMessage(myAddress.getHostAddress());
                         socket.send(helloPacket.createPacket(PORT));
                         topology.notifyRequest(helloPacket);
-                        socket.send(helloPacket.createPacket(PORT));
+                        //socket.send(helloPacket.createPacket(PORT));
                     }
 
                     //output the Connection graph
@@ -78,7 +78,7 @@ class Node {
             ColorTerm.println(ColorTerm.Color.RED, "Vertex: " + vertex.getAddress().getHostAddress());
             ColorTerm.println(ColorTerm.Color.RED, "-------------------------------");
             for (Topology.Vertex v : vertex.getConnectedVertices()) {
-                ColorTerm.println(ColorTerm.Color.RED, v.getAddress().getHostAddress());
+                ColorTerm.println(ColorTerm.Color.RED, v.getAddress().getHostAddress() + "time of flight: " + v.getTimeOfFlight());
             }
             ColorTerm.println(ColorTerm.Color.RED, "-------------------------------");
             for (Topology.Vertex v : vertex.getConnectedVertices()) {
@@ -101,9 +101,9 @@ class Node {
                     //check if the packet if link discovery
                     if (isPacketLinkDiscovery(dataPacket)) {
                         synchronized (Node.this) {
-                            if(dataPacket.getRemainingHops() == 10) {
-                                System.out.println("Acquired Link Discovery packet : " + dataPacket.getSourceIp().getHostAddress());
-                            }
+//                            if (dataPacket.getRemainingHops() == 10) {
+//                                System.out.println("Acquired Link Discovery packet : " + dataPacket.getSourceIp().getHostAddress());
+//                            }
                             if (!isMyPacket(dataPacket)) {
                                 //new host detected, send a hello message
                                 hosts.add(dataPacket.getSourceIp());
@@ -111,7 +111,7 @@ class Node {
                         }
                     } else if (isPacketHello(dataPacket)) {
                         if (dataPacket.getDestinationIp().equals(myAddress)) {
-                            synchronized (Node.this){
+                            synchronized (Node.this) {
                                 hosts.add(dataPacket.getSourceIp());
                             }
                             //received a hello message send back a hello reply
@@ -121,7 +121,7 @@ class Node {
                             //no need to forward
                             continue;
                         } else {
-                            synchronized (Node.this){
+                            synchronized (Node.this) {
                                 hosts.add(dataPacket.getSourceIp());
                             }
                             //do nothing ... but append my ip and then broadcast again
@@ -136,7 +136,7 @@ class Node {
                             }
                             continue;
                         } else {
-                            synchronized (Node.this){
+                            synchronized (Node.this) {
                                 hosts.add(dataPacket.getSourceIp());
                             }
                             dataPacket.appendMessage(myAddress.getHostAddress());
@@ -210,7 +210,7 @@ class Node {
     }
 
     public void startLinkDiscovery() {
-        timer.scheduleAtFixedRate(linkDiscovery, LINK_DISCOVERY_REPEAT_INTERVAL, LINK_DISCOVERY_REPEAT_INTERVAL);
+        timer.scheduleAtFixedRate(linkDiscoveryService, LINK_DISCOVERY_REPEAT_INTERVAL, LINK_DISCOVERY_REPEAT_INTERVAL);
     }
 
     public void startChatService() {
@@ -223,7 +223,7 @@ class Node {
     }
 
     public void stopLinkDiscovery() {
-        linkDiscovery.cancel();
+        linkDiscoveryService.cancel();
     }
 }
 

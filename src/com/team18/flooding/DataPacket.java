@@ -7,7 +7,7 @@ import java.net.UnknownHostException;
 public class DataPacket {
     private static final String DELIMITER = ",";
     private static final String END_DELIMITER = "#";
-    private int remainingHops = 10;
+    private int remainingHops = 5;
     private long creationTime;
     private long receivedTime;
     private InetAddress sourceIp;

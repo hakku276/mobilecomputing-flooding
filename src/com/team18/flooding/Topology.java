@@ -38,7 +38,7 @@ public class Topology {
             for (int i = path.length - 1; i > 1; i--) {
                 InetAddress connectedTo = InetAddress.getByName(path[i]);
                 InetAddress addr = InetAddress.getByName(path[i - 1]);
-                long timeOfFlight = requestPacket.getCreationTime() - packet.getReceivedTime();
+                long timeOfFlight = packet.getReceivedTime() - requestPacket.getCreationTime();
                 self.addConnection(addr, connectedTo, timeOfFlight);
 
 //                if(timeOfFlights.containsKey(addr) && (timeOfFlight < timeOfFlights.get(addr))){
